@@ -20,11 +20,11 @@ class item_class:
         return str(">" + self.name)
 
 class input_class(item_class):
-    def activate(self, screen):
+    def activate(self):
         self.input_string = screen.get_input()
-
-    def run(self, input_string):
-        print(f'{input_string}')
+        self.run()
+    def run(self):
+        print(f'{self.input_string}')
 
 class add_class(input_class):
     def run(self):
@@ -47,7 +47,7 @@ class screen_class:
         self.pane_dictonary = { "menu": [0, 0, (curses.LINES -1), (self.menu_width + 2)],
                                 "main": [0, (self.menu_width + 2), (curses.LINES -1), ((curses.COLS - self.menu_width) + 1)],
                                 "popup": [((curses.LINES // 2) - 10), ((curses.COLS // 2) -20), 20, 40],
-                          } #this is y, x, height, width
+                              } #this is y, x, height, width
 
     def print_list_to_pane(self, list_to_write, selected, pane):
         pane_coords = self.pane_dictonary.get(pane)
@@ -75,9 +75,12 @@ class screen_class:
         curses.curs_set(True)#show the cursor
         self.stdscrn.keypad(False)#keypad off
 
+    def get_input(self):
+        return "maguro"
+
+screen = screen_class()
 def main():
-    screen = screen_class()
-    menu_list = [ add_class("add"), item_class("save"), item_class("load") ]
+    menu_list = [ add_class("add"), input_class("save"), item_class("load") ]
     current_selected = 0
     menu_selected = current_selected
     screen.print_list_to_pane(menu_list, current_selected, "menu")
@@ -104,7 +107,7 @@ def main():
                 current_selected = 0
                 screen.print_list_to_pane(current_list, current_selected, current_pane)
             elif char == "\n" and current_pane == "menu":
-                menu_list[current_selected].activate(screen)
+                menu_list[current_selected].activate()
         elif current_pane == "main":
             if char == "h":
                 screen.print_list_to_pane(current_list, -1, current_pane)
@@ -114,8 +117,6 @@ def main():
                 screen.print_list_to_pane(current_list, current_selected, current_pane)
             elif char == "m":
                 menu_list[current_selected].activate(screen)
-        #else:
-            #print(f'{char}')
     screen.terminate()
 
 main()#ore ha ochinchin ga daisuki nan da yo // is this divine intellect even?
