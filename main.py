@@ -41,7 +41,7 @@ class interface_class():#this is the interface (cli class)
             if shopping_list.selected == iterator: #is this the selected item?
                 self.stdscr.move(y_coord, x_coord - 1) #go back to the margin
                 self.stdscr.addch(self.shopping_list_select_symbol) #print the selection char (">")
-            self.stdscr.addnstr((shopping_list.items[iterator][0] + "                                                         "), (self.cols - 19))#print item
+            self.stdscr.addnstr((shopping_list.items[iterator][0] + "                                                             "), (self.cols - 19))#print item
         y_coord += 1 #when the foor loop is done go to the next line
         self.stdscr.refresh() #refresh the screen, this displays what we just printed
 
@@ -166,12 +166,12 @@ class save_class(popup_class):
         self.activate_popup("file name to save to: (enter to submit)")
         input_string = self.get_input() #get input using the the input method
         try:
-            file_to_write = open(input_string + ".shoppinglist", "w")
-            file_to_write.write(json.dumps(shopping_list.items))
-            file_to_write.close()
+            file_to_write = open(input_string + ".shoppinglist", "w") #open the file specified by user
+            file_to_write.write(json.dumps(shopping_list.items)) #dump current shoppinglist as json
+            file_to_write.close() #close file
         except:
             print(f"error: couldn't write to file")
-        interface.stdscr.clear()
+        interface.stdscr.clear() #refresh terminal to remove popup
         interface.print_menu()
         interface.print_shopping_list()
 
@@ -181,24 +181,17 @@ class load_class(popup_class):
         input_string = self.get_input() #get input using the the input method
         try:
             file_load = open(input_string + ".shoppinglist", "r+") #open the file defailt.shoppinglist
-            print(f"file open")
             load_string = file_load.read() #read the file into a json string
-            print(f"file read")
             file_load.close()
-            print(f"file closed")
-            new_items = json.loads(load_string) #parse the json into the "items" list
-            print(f"json parsed")
+            new_items = json.loads(load_string) #parse the json into the items list
             for iterator in range(len(new_items)):
                 shopping_list.items.append(new_items[iterator])
         except:
             print(f"error: couldn't read from file")
-        interface.stdscr.clear()
+        interface.stdscr.clear() #refresh terminal to remove popup
         interface.print_menu()
         interface.print_shopping_list()
 
-
-
-#non functor functions
 def move_down(pane):#this will move the selected item down in the list
     if pane == "shopping_list" and shopping_list.selected < (len(shopping_list.items) - 1):#check if the variable is at the highest index already
         item = shopping_list.items.pop(shopping_list.selected)#pop the item and store it in a variable
