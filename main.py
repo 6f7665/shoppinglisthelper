@@ -83,7 +83,7 @@ class shopping_list_class: #this is the actual shopping list class, the items ar
 #menu class
 class menu_class:
     def __init__(self): #the menu class holds the options list and a list of keybinds the user may use, much like nano
-        self.options = [["add", add_class()], "load", ["save", save_class()], ["sort list", sort_class()], "export to file", "from recipe"]
+        self.options = [["add", add_class()], ["load", load_class()], ["save", save_class()], ["sort list", sort_class()], ["remove", remove_class()], ["export", "hello"]]
         self.legend = ["k: up", "j: down", "l: list", "h: menu", "m: move up", "n: move down", "q: quit"]
         self.selected = 0
     def activate(self):
@@ -148,6 +148,19 @@ class add_class(popup_class):
         interface.print_menu()
         interface.print_shopping_list()
 
+class remove_class(popup_class):
+    def activate_option(self):
+        self.width = 45
+        self.activate_popup("remove: (enter to submit)")
+        input_string = self.get_input() #get input using the the input method
+        for iterator in range(len(shopping_list.items) - 1):#loop through list
+            if shopping_list.items[iterator][0] == input_string:#find all matches
+                shopping_list.items.pop(iterator)#pop all indexes that matches
+        exit_on_q.set()#arm the exit on q bool
+        interface.stdscr.clear()
+        interface.print_menu()
+        interface.print_shopping_list()
+
 class save_class(popup_class):
     def activate_option(self):
         self.activate_popup("file name to save to: (enter to submit)")
@@ -164,17 +177,34 @@ class save_class(popup_class):
 
 class load_class(popup_class):
     def activate_option(self):
-        self.activate_popup("file name to save to: (enter to submit)")
+        self.activate_popup("enter list to load: (enter to submit)")
         input_string = self.get_input() #get input using the the input method
+        try:
+            file_load = open(input_string + ".shoppinglist", "r+") #open the file defailt.shoppinglist
+            print(f"file open")
+            load_string = file_load.read() #read the file into a json string
+            print(f"file read")
+            file_load.close()
+            print(f"file closed")
+            new_items = json.loads(load_string) #parse the json into the "items" list
+            print(f"json parsed")
+            for iterator in range(len(new_items)):
+                shopping_list.items.append(new_items[iterator])
+        except:
+            print(f"error: couldn't read from file")
+        interface.stdscr.clear()
+        interface.print_menu()
+        interface.print_shopping_list()
+
 
 
 #non functor functions
-def move_down(pane):
-    if pane == "shopping_list" and shopping_list.selected < (len(shopping_list.items) - 1):
-        item = shopping_list.items.pop(shopping_list.selected)
-        shopping_list.items.insert((shopping_list.selected + 1), item)
-        shopping_list.selected += 1
-        interface.print_shopping_list()
+def move_down(pane):#this will move the selected item down in the list
+    if pane == "shopping_list" and shopping_list.selected < (len(shopping_list.items) - 1):#check if the variable is at the highest index already
+        item = shopping_list.items.pop(shopping_list.selected)#pop the item and store it in a variable
+        shopping_list.items.insert((shopping_list.selected + 1), item)#inser at higher index
+        shopping_list.selected += 1#move the selection
+        interface.print_shopping_list()#reprint the shopping list
 
 def select_down(pane):
     if pane == "menu" and menu.selected < (len(menu.options) - 1):
@@ -184,12 +214,12 @@ def select_down(pane):
         shopping_list.selected += 1
         interface.print_shopping_list()
 
-def move_up(pane):
-    if pane == "shopping_list" and shopping_list.selected != 0:
-        item = shopping_list.items.pop(shopping_list.selected)
-        shopping_list.items.insert((shopping_list.selected - 1), item)
-        shopping_list.selected -= 1
-        interface.print_shopping_list()
+def move_up(pane):#this will move the selected item up in the list
+    if pane == "shopping_list" and shopping_list.selected != 0: #check if we are already on top of the list
+        item = shopping_list.items.pop(shopping_list.selected) #pop the item and put it in a variable
+        shopping_list.items.insert((shopping_list.selected - 1), item) #insert the item at a lower index
+        shopping_list.selected -= 1 #move the selection to match the item movement
+        interface.print_shopping_list() #reprint the shopping list to display the update
 
 def select_up(pane):
     if pane == "menu" and menu.selected != 0:
