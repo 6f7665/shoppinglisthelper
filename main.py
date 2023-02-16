@@ -3,42 +3,42 @@ import json #this is to save and load shopping lists
 import threading #this makes the input crispier than pringles
 import queue #this is to send data between threads
 
-class input_thread_class(threading.Thread):
+class input_thread_class(threading.Thread): #making the input a separate thread makes the program feel more responsive
     def run(self):
         key = "null" #initialize var and enter the loop
         while key != "q":
             key = interface.stdscr.getkey()
             input_queue.put(key)
 
-class interface_class():
+class interface_class():#this is the interface (cli class)
     def __init__(self):
-        self.stdscr = curses.initscr()
-        curses.cbreak()
-        curses.noecho()
-        curses.curs_set(0)
-        self.rows, self.cols = self.stdscr.getmaxyx()
+        self.stdscr = curses.initscr()#create the curses screen
+        curses.cbreak() #turn on cbreak (enter wont jump the cursor around)
+        curses.noecho() #turn on noecho (you wont see what you type)
+        curses.curs_set(0) #this is buggy on windows and in vscode, please use linuxx or at least powershell
+        self.rows, self.cols = self.stdscr.getmaxyx() #get the windows rows and columns and store them in the object
         self.stdscr.clear()#clear the screen
-        self.print_menu()
-        self.print_shopping_list()
+        self.print_menu()#print the menu
+        self.print_shopping_list()#print the shopping list beside the menu
 
-    def print_shopping_list(self):
-        y_coord = 0
+    def print_shopping_list(self): #defines how you print the shopping list
+        y_coord = 0 #setup coords
         x_coord = 18
-        self.stdscr.move(y_coord +1, x_coord - 1)
-        self.stdscr.vline(" ", len(shopping_list.items))
-        self.stdscr.move(y_coord, x_coord)
-        self.stdscr.addstr("shopping-list:")#15 chars long
-        for iterator in range(len(shopping_list.items)):
-            y_coord += 1
-            self.stdscr.move(y_coord, x_coord)
-            if shopping_list.selected == iterator:
-                self.stdscr.move(y_coord, x_coord - 1)
-                self.stdscr.addch(">")
-            self.stdscr.addnstr((shopping_list.items[iterator][0] + "                                                         "), (curses.COLS - 19))
-        y_coord += 1
-        self.stdscr.refresh()
+        self.stdscr.move(y_coord +1, x_coord - 1) #move to coords with x - 1
+        self.stdscr.vline(" ", len(shopping_list.items)) #this cleans out previous selection char (">")
+        self.stdscr.move(y_coord, x_coord) #go to coord
+        self.stdscr.addstr("shopping-list:")#15 chars long, this is the title of the shopping list section
+        for iterator in range(len(shopping_list.items)):# go through every item in the shoppinglist and print them
+            y_coord += 1 #set y coord to next line
+            self.stdscr.move(y_coord, x_coord) #go to next line
+            if shopping_list.selected == iterator: #is this the selected item?
+                self.stdscr.move(y_coord, x_coord - 1) #go back to the margin
+                self.stdscr.addch(">") #print the selection char (">")
+            self.stdscr.addnstr((shopping_list.items[iterator][0] + "                                                         "), (self.cols - 19))#print item
+        y_coord += 1 #when the foor loop is done go to the next line
+        self.stdscr.refresh() #refresh the screen, this displays what we just printed
 
-    def print_menu(self):
+    def print_menu(self): #this prints the menu, it's quite simimilair to the shopping list print function
         y_coord = 0
         x_coord = 1
         self.stdscr.move(y_coord +1, x_coord - 1)
@@ -62,17 +62,16 @@ class interface_class():
             self.stdscr.addstr(menu.legend[iterator])
         self.stdscr.refresh()
 
-
-class shopping_list_class:
+class shopping_list_class: #this is the actual shopping list class, the items are stored in the item list "items"
     def __init__(self):
         try: #if we can read a json from default.shoppinglist we won't put the default items eggs and bacon in the list
-            file_open = open("default.shoppinglist", "r")
-            json_string = read(file_open)
-            self.items = json.load(json_string)
+            file_open = open("default.shoppinglist", "r") #open the file defailt.shoppinglist
+            json_string = read(file_open) #read the file into a json string
+            self.items = json.load(json_string) #parse the json into the "items" list
         except:
-            self.items = [["eggs", 12], ["bacon", 1]]
-        self.items = [["eggs", 12], ["bacon", 1], ["toast", 1], ["eggplant", 2], ["carrots", 4]]
-        self.selected = 0
+            self.items = [["eggs", 12], ["bacon", 1]] #if something goes wrong, just set these as default, bacon and eggs is the best breakfast innit
+        #self.items = [["eggs", 12], ["bacon", 1], ["toast", 1], ["eggplant", 2], ["carrots", 4]]
+        self.selected = 0 #the 0th item is selected, this is the top item in the list
 
 #menu class
 class menu_class:
@@ -84,7 +83,7 @@ class menu_class:
         self.options[self.selected][1].activate_option()
 
 class option_class:
-    def set_coords(self):
+    def set_coords(self): #this just returns 0 so that the main function doesn't throw an exception when it tries to set coords to all the options in them menu
         return 0
 
 class sort_class(option_class):
@@ -97,13 +96,16 @@ class popup_class(option_class):
         self.width = 40
         self.height = 4
         self.titel = "popup"
-        self.x_coord = 30 #this is just placeholders
-        self.y_coord = 6 #this is just placeholders
+        #this is just placeholders because the interface has yet to initiate since the interface depends on the menu this object is inside
+        self.x_coord = 30
+        self.y_coord = 6
     def set_coords(self):
         self.x_coord = (interface.cols // 2) - (self.width // 2)
         self.y_coord = (interface.rows // 2) - (self.height // 2)
     def activate_popup(self):
         interface.stdscr.move(self.y_coord, self.x_coord)
+        interface.stdscr.hline(curses.ACS_HLINE, self.width)
+        interface.stdscr.move(self.y_coord + self.height, self.x_coord)
         interface.stdscr.hline(curses.ACS_HLINE, self.width)
         interface.stdscr.refresh()
 
@@ -145,6 +147,12 @@ def select_up(pane):
 def main():
     input_thread.start()
     selected_pane = "menu"
+
+    for iterator in range(len(menu.options)):
+        try:
+            menu.options[iterator][1].set_coords()
+        except:
+            print(f'{menu.options[iterator][0]} doesnt have a popup function')
     while True:
         key = input_queue.get()
         if key == "q":
