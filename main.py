@@ -70,9 +70,9 @@ class interface_class():#this is the interface (cli class)
 class shopping_list_class: #this is the actual shopping list class, the items are stored in the item list "items"
     def __init__(self):
         try: #if we can read a json from default.shoppinglist we won't put the default items eggs and bacon in the list
-            file_open = open("default.shoppinglist", "r") #open the file defailt.shoppinglist
-            json_string = read(file_open) #read the file into a json string
-            self.items = json.load(json_string) #parse the json into the "items" list
+            file_open = open("default.shoppinglist", "r+") #open the file defailt.shoppinglist
+            json_string = file_open.read() #read the file into a json string
+            self.items = json.loads(json_string) #parse the json into the "items" list
         except:
             self.items = [["eggs", 12], ["bacon", 1]] #if something goes wrong, just set these as default, bacon and eggs is the best breakfast innit
         #self.items = [["eggs", 12], ["bacon", 1], ["toast", 1], ["eggplant", 2], ["carrots", 4]]
@@ -81,7 +81,7 @@ class shopping_list_class: #this is the actual shopping list class, the items ar
 #menu class
 class menu_class:
     def __init__(self): #the menu class holds the options list and a list of keybinds the user may use, much like nano
-        self.options = [["add", add_class()], "load", "save", ["sort list", sort_class()], "export to file", "from recipe"]
+        self.options = [["add", add_class()], "load", ["save", save_class()], ["sort list", sort_class()], "export to file", "from recipe"]
         self.legend = ["k: up", "j: down", "l: list", "h: menu", "m: move up", "n: move down", "q: quit"]
         self.selected = 0
     def activate(self):
@@ -101,7 +101,6 @@ class popup_class(option_class):
     def __init__(self):
         self.width = 40
         self.height = 3
-        self.titel = "popup"
         #this is just placeholders because the interface has yet to initiate since the interface depends on the menu this object is inside
         self.x_coord = 30
         self.y_coord = 6
@@ -111,6 +110,8 @@ class popup_class(option_class):
     def activate_popup(self, title): #this hideous code creates a rectangle with a title
         interface.stdscr.move(self.y_coord, self.x_coord)
         interface.stdscr.hline(curses.ACS_HLINE, self.width)
+        interface.stdscr.move(self.y_coord + 1, self.x_coord + 2)
+        interface.stdscr.addnstr(title, self.width - 5)
         interface.stdscr.move(self.y_coord + 1, self.x_coord)
         interface.stdscr.vline(curses.ACS_VLINE, self.height - 1)
         interface.stdscr.move(self.y_coord + 1, self.x_coord + self.width - 1)
@@ -122,10 +123,7 @@ class popup_class(option_class):
         interface.stdscr.move(self.y_coord + 2, self.x_coord + 2)
         interface.stdscr.addnstr(input_string, self.width - 5)
         interface.stdscr.refresh()
-
-class add_class(popup_class):
-    def activate_option(self):
-        self.activate_popup("enter item name: (enter to submit)")
+    def get_input(self):
         input_string = ""
         key = " "
         while key != "\n":
@@ -134,11 +132,38 @@ class add_class(popup_class):
                 break
             input_string += key
             self.show_input(input_string)
+        exit_on_q.set()#arm the exit on q bool
+        return input_string
+
+class add_class(popup_class):
+    def activate_option(self):
+        self.activate_popup("enter item name: (enter to submit)")
+        input_string = self.get_input() #get input using the the input method
         shopping_list.items.append([input_string, 1]) #append the string to the shopping list
         exit_on_q.set()#arm the exit on q bool
         interface.stdscr.clear()
         interface.print_menu()
         interface.print_shopping_list()
+
+class save_class(popup_class):
+    def activate_option(self):
+        self.activate_popup("file name to save to: (enter to submit)")
+        input_string = self.get_input() #get input using the the input method
+        try:
+            file_to_write = open(input_string + ".shoppinglist", "w")
+            file_to_write.write(json.dumps(shopping_list.items))
+            file_to_write.close()
+        except:
+            print(f"error: couldn't write to file")
+        interface.stdscr.clear()
+        interface.print_menu()
+        interface.print_shopping_list()
+
+class load_class(popup_class):
+    def activate_option(self):
+        self.activate_popup("file name to save to: (enter to submit)")
+        input_string = self.get_input() #get input using the the input method
+
 
 #non functor functions
 def move_down(pane):
