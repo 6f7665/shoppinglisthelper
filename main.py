@@ -32,7 +32,7 @@ class interface_class():#this is the interface (cli class)
         self.stdscr.move(y_coord +1, x_coord - 1) #move to coords with x - 1
         self.stdscr.vline(" ", len(shopping_list.items)) #this cleans out previous selection char (">")
         self.stdscr.move(y_coord, x_coord) #go to coord
-        self.stdscr.addstr("shopping-list:")#15 chars long, this is the title of the shopping list section
+        self.stdscr.addstr("shopping-list:")#this is the title of the shopping list section
         for iterator in range(len(shopping_list.items)):# go through every item in the shoppinglist and print them
             y_coord += 1 #set y coord to next line
             self.stdscr.move(y_coord, x_coord) #go to next line
@@ -57,14 +57,14 @@ class interface_class():#this is the interface (cli class)
             if menu.selected == iterator:
                 self.stdscr.move(y_coord, x_coord - 1)
                 self.stdscr.addch(">")
-            self.stdscr.addstr(menu.options[iterator][0])
+            self.stdscr.addnstr(menu.options[iterator][0], 15)
         y_coord += 1
         self.stdscr.move(y_coord, 1)
         self.stdscr.hline(curses.ACS_HLINE, 15)
         for iterator in range(len(menu.legend)):
             y_coord += 1
             self.stdscr.move(y_coord, x_coord)
-            self.stdscr.addstr(menu.legend[iterator])
+            self.stdscr.addnstr(menu.legend[iterator], 15)
         self.stdscr.refresh()
 
 class shopping_list_class: #this is the actual shopping list class, the items are stored in the item list "items"
