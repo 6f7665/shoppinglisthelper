@@ -17,11 +17,32 @@ class interface_class():
         curses.noecho()
         curses.curs_set(0)
         self.stdscr.clear()#clear the screen
-        self.stdscr.addstr("menu:     ")#10 chars long
+        self.print_menu()
+
+    def print_menu(self):
+        y_coord = 0
+        x_coord = 1
+        self.stdscr.move(y_coord +1, x_coord - 1)
+        self.stdscr.vline(" ", len(menu.options))
+        self.stdscr.move(y_coord, x_coord)
+        self.stdscr.addstr("menu:          ")#15 chars long
         self.stdscr.vline(curses.ACS_VLINE, 1000)
+        for iterator in range(len(menu.options)):
+            y_coord += 1
+            self.stdscr.move(y_coord, x_coord)
+            if menu.selected == iterator:
+                self.stdscr.move(y_coord, x_coord - 1)
+                self.stdscr.addch(">")
+            self.stdscr.addstr(menu.options[iterator])
+        y_coord += 1
+        self.stdscr.move(y_coord, 1)
+        self.stdscr.hline(curses.ACS_HLINE, 15)
+        for iterator in range(len(menu.legend)):
+            y_coord += 1
+            self.stdscr.move(y_coord, 1)
+            self.stdscr.addstr(menu.legend[iterator])
         self.stdscr.refresh()
-        for option in menu.options:
-            self.stdscr.addstr(option)
+
 
 class shopping_list_class:
     def __init__(self):
@@ -36,19 +57,24 @@ class shopping_list_class:
 #menu class
 class menu_class:
     def __init__(self):
-        self.options = ["add", "remove", "read", "save"]
+        self.options = ["add", "load", "save", "sort list", "export to file", "from recipe"]
+        self.legend = ["k: up", "j: down", "l: list", "h: menu", "m: move up", "n: move down", "q: quit"]
         self.selected = 0
 
 #non functor functions
 def select_down(pane):
-    if pane == "menu" and menu.selected < len(menu.menu_list):
+    if pane == "menu" and menu.selected < (len(menu.options) - 1):
         menu.selected += 1
-    elif pane == "shopping_list" and shopping_list.selected < len(shopping_list.items):
+        interface.print_menu()
+    elif pane == "shopping_list" and shopping_list.selected < (len(shopping_list.items) - 1):
         shopping_list.selected += 1
 
 def select_up(pane):
     if pane == "menu" and menu.selected != 0:
         menu.selected -= 1
+        interface.print_menu()
+    elif pane == "shopping_list" and shopping_list.selected != 0:
+        shopping_list.selected -= 1
 
 def main():
     input_thread.start()
