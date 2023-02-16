@@ -75,7 +75,7 @@ class shopping_list_class: #this is the actual shopping list class, the items ar
 
 #menu class
 class menu_class:
-    def __init__(self):
+    def __init__(self): #the menu class holds the options list and a list of keybinds the user may use, much like nano
         self.options = [["add", add_class()], "load", "save", ["sort list", sort_class()], "export to file", "from recipe"]
         self.legend = ["k: up", "j: down", "l: list", "h: menu", "m: move up", "n: move down", "q: quit"]
         self.selected = 0
@@ -175,7 +175,7 @@ def main():
 
 menu = menu_class()#this is the menu class
 shopping_list = shopping_list_class()#the actual shopping list
-input_thread = input_thread_class()
-interface = interface_class()#the interface class (which is a thread)
 input_queue = queue.Queue()#this makes it possible to read and send data between threads
+input_thread = input_thread_class() #this creates a thread for the input
+interface = interface_class()#the interface class (which is a thread)
 main()#starts main
