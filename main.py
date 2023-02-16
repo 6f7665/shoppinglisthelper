@@ -6,9 +6,14 @@ import queue #this is to send data between threads
 class input_thread_class(threading.Thread): #making the input a separate thread makes the program feel more responsive
     def run(self):
         key = "null" #initialize var and enter the loop
-        while key != "q":
+        stop_bool = False
+        while stop_bool == False: #if the key is q and exit on q is armed we will exit this loop and join thread with main
             key = interface.stdscr.getkey()
             input_queue.put(key)
+            if key == " " or key == "\n":
+                exit_on_q.clear()#disarm the exit on q bool
+            if exit_on_q.is_set() and key == "q":
+                stop_bool = True #this will term the loop
 
 class interface_class():#this is the interface (cli class)
     def __init__(self):
@@ -90,28 +95,50 @@ class sort_class(option_class):
     def activate_option(self):
         shopping_list.items.sort()
         interface.print_shopping_list()
+        exit_on_q.set()#arm the exit on q bool
 
 class popup_class(option_class):
     def __init__(self):
         self.width = 40
-        self.height = 4
+        self.height = 3
         self.titel = "popup"
         #this is just placeholders because the interface has yet to initiate since the interface depends on the menu this object is inside
         self.x_coord = 30
         self.y_coord = 6
-    def set_coords(self):
+    def set_coords(self): #this will setup coords after the interface is initialized
         self.x_coord = (interface.cols // 2) - (self.width // 2)
         self.y_coord = (interface.rows // 2) - (self.height // 2)
-    def activate_popup(self):
+    def activate_popup(self, title): #this hideous code creates a rectangle with a title
         interface.stdscr.move(self.y_coord, self.x_coord)
         interface.stdscr.hline(curses.ACS_HLINE, self.width)
+        interface.stdscr.move(self.y_coord + 1, self.x_coord)
+        interface.stdscr.vline(curses.ACS_VLINE, self.height - 1)
+        interface.stdscr.move(self.y_coord + 1, self.x_coord + self.width - 1)
+        interface.stdscr.vline(curses.ACS_VLINE, self.height - 1)
         interface.stdscr.move(self.y_coord + self.height, self.x_coord)
         interface.stdscr.hline(curses.ACS_HLINE, self.width)
+        interface.stdscr.refresh()
+    def show_input(self, input_string):
+        interface.stdscr.move(self.y_coord + 2, self.x_coord + 2)
+        interface.stdscr.addnstr(input_string, self.width - 5)
         interface.stdscr.refresh()
 
 class add_class(popup_class):
     def activate_option(self):
-        self.activate_popup()
+        self.activate_popup("enter item name: (enter to submit)")
+        input_string = ""
+        key = " "
+        while key != "\n":
+            key = input_queue.get()
+            if key == "\n":
+                break
+            input_string += key
+            self.show_input(input_string)
+        shopping_list.items.append([input_string, 1]) #append the string to the shopping list
+        exit_on_q.set()#arm the exit on q bool
+        interface.stdscr.clear()
+        interface.print_menu()
+        interface.print_shopping_list()
 
 #non functor functions
 def move_down(pane):
@@ -154,7 +181,8 @@ def main():
         except:
             print(f'{menu.options[iterator][0]} doesnt have a popup function')
     while True:
-        key = input_queue.get()
+        exit_on_q.set() #arm the exit on q bool for the input thread
+        key = input_queue.get() #get the keypress from fifo queue
         if key == "q":
             break
         elif key == "m":
@@ -176,6 +204,7 @@ def main():
 menu = menu_class()#this is the menu class
 shopping_list = shopping_list_class()#the actual shopping list
 input_queue = queue.Queue()#this makes it possible to read and send data between threads
+exit_on_q = threading.Event()#exit the input loop when q is pressed when this is set
 input_thread = input_thread_class() #this creates a thread for the input
 interface = interface_class()#the interface class (which is a thread)
 main()#starts main
