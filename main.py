@@ -34,7 +34,7 @@ class interface_class():#this is the interface (cli class)
         self.stdscr.move(y_coord +1, x_coord - 1) #move to coords with x - 1
         self.stdscr.vline(" ", len(shopping_list.items) + 1) #this cleans out previous selection char (">") # + 1 doesnt throw exception when empty
         self.stdscr.move(y_coord, x_coord) #go to coord
-        self.stdscr.addstr("shopping-list:")#this is the title of the shopping list section
+        self.stdscr.addstr("shopping-list: (" + str(len(shopping_list.items)) + " items)")#this is the title of the shopping list section
         for iterator in range(len(shopping_list.items)):# go through every item in the shoppinglist and print them
             y_coord += 1 #set y coord to next line
             self.stdscr.move(y_coord, x_coord) #go to next line
