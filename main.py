@@ -20,7 +20,9 @@ class interface_class():#this is the interface (cli class)
         self.stdscr = curses.initscr()#create the curses screen
         curses.cbreak() #turn on cbreak (enter wont jump the cursor around)
         curses.noecho() #turn on noecho (you wont see what you type)
-        curses.curs_set(0) #this is buggy on windows and in vscode, please use linuxx or at least powershell
+        curses.curs_set(0) #this is buggy on windows and in vscodium (and vscode), please use linux or at least powershell
+        self.menu_select_symbol = ">" #this is to show the which list you are in
+        self.shopping_list_select_symbol = "-"
         self.rows, self.cols = self.stdscr.getmaxyx() #get the windows rows and columns and store them in the object
         self.stdscr.clear()#clear the screen
         self.print_menu()#print the menu
@@ -38,7 +40,7 @@ class interface_class():#this is the interface (cli class)
             self.stdscr.move(y_coord, x_coord) #go to next line
             if shopping_list.selected == iterator: #is this the selected item?
                 self.stdscr.move(y_coord, x_coord - 1) #go back to the margin
-                self.stdscr.addch(">") #print the selection char (">")
+                self.stdscr.addch(self.shopping_list_select_symbol) #print the selection char (">")
             self.stdscr.addnstr((shopping_list.items[iterator][0] + "                                                         "), (self.cols - 19))#print item
         y_coord += 1 #when the foor loop is done go to the next line
         self.stdscr.refresh() #refresh the screen, this displays what we just printed
@@ -56,7 +58,7 @@ class interface_class():#this is the interface (cli class)
             self.stdscr.move(y_coord, x_coord)
             if menu.selected == iterator:
                 self.stdscr.move(y_coord, x_coord - 1)
-                self.stdscr.addch(">")
+                self.stdscr.addch(self.menu_select_symbol)
             self.stdscr.addnstr(menu.options[iterator][0], 15)
         y_coord += 1
         self.stdscr.move(y_coord, 1)
@@ -208,7 +210,7 @@ def main():
     while True:
         exit_on_q.set() #arm the exit on q bool for the input thread
         key = input_queue.get() #get the keypress from fifo queue
-        if key == "q":
+        if key == "q": #python doesn't have switch case and this has to call functions, thus dictonary is too much hassle
             break
         elif key == "m":
             move_up(selected_pane)
@@ -219,9 +221,17 @@ def main():
         elif key == "k":
             select_up(selected_pane)
         elif key == "h":
-            selected_pane = "menu"
+            selected_pane = "menu"#set selection
+            interface.menu_select_symbol = ">"#set new selection symbols
+            interface.shopping_list_select_symbol = "-"
+            interface.print_menu()#update cli
+            interface.print_shopping_list()
         elif key == "l":
-            selected_pane = "shopping_list"
+            selected_pane = "shopping_list"#set selection
+            interface.menu_select_symbol = "-"#set new selection symbols
+            interface.shopping_list_select_symbol = ">"
+            interface.print_menu()#update cli
+            interface.print_shopping_list()
         elif key == " " or key == "\n":
             menu.activate()
     input_thread.join()#when the loop is broken we will wait for the interface thread to join the main thread
