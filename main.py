@@ -32,7 +32,7 @@ class interface_class():#this is the interface (cli class)
         y_coord = 0 #setup coords
         x_coord = 18
         self.stdscr.move(y_coord +1, x_coord - 1) #move to coords with x - 1
-        self.stdscr.vline(" ", len(shopping_list.items)) #this cleans out previous selection char (">")
+        self.stdscr.vline(" ", len(shopping_list.items) + 1) #this cleans out previous selection char (">") # + 1 doesnt throw exception when empty
         self.stdscr.move(y_coord, x_coord) #go to coord
         self.stdscr.addstr("shopping-list:")#this is the title of the shopping list section
         for iterator in range(len(shopping_list.items)):# go through every item in the shoppinglist and print them
@@ -139,6 +139,7 @@ class popup_class(option_class):
 
 class add_class(popup_class):
     def activate_option(self):
+        self.width = 45
         self.activate_popup("enter item name: (enter to submit)")
         input_string = self.get_input() #get input using the the input method
         shopping_list.items.append([input_string, 1]) #append the string to the shopping list
@@ -198,6 +199,16 @@ def select_up(pane):
         shopping_list.selected -= 1
         interface.print_shopping_list()
 
+def remove_item():
+    try:
+        shopping_list.items.pop(shopping_list.selected)
+        interface.stdscr.clear()#flush the screen as the list gets shorter
+        select_up("shopping_list")#move selection, update interface
+        interface.print_menu()
+        interface.print_shopping_list()
+    except:
+        print(f'error: shoppinglist is empty, cant delete item {str(shopping_list.selected)}')
+
 def main():
     input_thread.start()
     selected_pane = "menu"
@@ -212,6 +223,8 @@ def main():
         key = input_queue.get() #get the keypress from fifo queue
         if key == "q": #python doesn't have switch case and this has to call functions, thus dictonary is too much hassle
             break
+        elif key == "d":
+            remove_item()
         elif key == "m":
             move_up(selected_pane)
         elif key == "n":
