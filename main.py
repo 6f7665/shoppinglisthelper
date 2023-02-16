@@ -83,7 +83,7 @@ class shopping_list_class: #this is the actual shopping list class, the items ar
 #menu class
 class menu_class:
     def __init__(self): #the menu class holds the options list and a list of keybinds the user may use, much like nano
-        self.options = [["add", add_class()], ["load", load_class()], ["save", save_class()], ["sort list", sort_class()], ["remove", remove_class()], ["export", "hello"]]
+        self.options = [["add", add_class()], ["load", load_class()], ["save", save_class()], ["sort list", sort_class()], ["remove", remove_class()], ["export", export_class()]]
         self.legend = ["k: up", "j: down", "l: list", "h: menu", "m: move up", "n: move down", "q: quit"]
         self.selected = 0
     def activate(self):
@@ -95,9 +95,20 @@ class option_class:
 
 class sort_class(option_class):
     def activate_option(self):
-        shopping_list.items.sort()
+        shopping_list.items.sort() #this calls the sort function of a python list
         interface.print_shopping_list()
         exit_on_q.set()#arm the exit on q bool
+
+class export_class(option_class):
+    def activate_option(self):
+        file_to_write = open("export.html", "w") #open the file specified by user
+        file_to_write.write('''<html lang="en"><head><title="shoppinglist"></head><body><ul>''')
+        for iterator in range(len(shopping_list.items)):
+            write_string = "<li>" + str(shopping_list.items[iterator][0]) + ": " + str(shopping_list.items[iterator][1]) + "</li>"
+            file_to_write.write(write_string)
+        file_to_write.write('''</ul></body></html>''')
+        exit_on_q.set()#arm the exit on q bool
+        file_to_write.close() #close file
 
 class popup_class(option_class):
     def __init__(self):
@@ -153,9 +164,11 @@ class remove_class(popup_class):
         self.width = 45
         self.activate_popup("remove: (enter to submit)")
         input_string = self.get_input() #get input using the the input method
-        for iterator in range(len(shopping_list.items) - 1):#loop through list
-            if shopping_list.items[iterator][0] == input_string:#find all matches
+        iterator = 0
+        while iterator < len(shopping_list.items):#loop through list
+            if shopping_list.items[iterator][0] == input_string: #find all matches
                 shopping_list.items.pop(iterator)#pop all indexes that matches
+            iterator += 1
         exit_on_q.set()#arm the exit on q bool
         interface.stdscr.clear()
         interface.print_menu()
