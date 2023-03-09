@@ -68,6 +68,10 @@ class interface_class():#this is the interface (cli class)
             self.stdscr.move(y_coord, x_coord)
             self.stdscr.addnstr(menu.legend[iterator], 15)
         self.stdscr.refresh()
+    def redraw(self):
+        self.stdscr.clear()
+        self.print_menu()
+        self.print_shopping_list()
 
 class shopping_list_class: #this is the actual shopping list class, the items are stored in the item list "items"
     def __init__(self):
@@ -84,7 +88,7 @@ class shopping_list_class: #this is the actual shopping list class, the items ar
 class menu_class:
     def __init__(self): #the menu class holds the options list and a list of keybinds the user may use, much like nano
         self.options = [["add", add_class()], ["load", load_class()], ["save", save_class()], ["sort list", sort_class()], ["remove", remove_class()], ["export", export_class()]]
-        self.legend = ["k: up", "j: down", "l: list", "h: menu", "m: move up", "n: move down", "q: quit"]
+        self.legend = ["k: up", "j: down", "l: list", "h: menu", "m: move up", "n: move down", "d: delete","c: clear list","q: quit"]
         self.selected = 0
     def activate(self):
         self.options[self.selected][1].activate_option()
@@ -104,7 +108,8 @@ class export_class(option_class):
         file_to_write = open("export.html", "w") #open the file specified by user
         file_to_write.write('''<html lang="en"><head><title="shoppinglist"></head><body><ul>''')
         for iterator in range(len(shopping_list.items)):
-            write_string = "<li>" + str(shopping_list.items[iterator][0]) + ": " + str(shopping_list.items[iterator][1]) + "</li>"
+            write_string = "<li>" + str(shopping_list.items[iterator][0]) + "</li>"
+            #write_string = "<li>" + str(shopping_list.items[iterator][0]) + ": " + str(shopping_list.items[iterator][1]) + "</li>"
             file_to_write.write(write_string)
         file_to_write.write('''</ul></body></html>''')
         exit_on_q.set()#arm the exit on q bool
@@ -155,9 +160,7 @@ class add_class(popup_class):
         input_string = self.get_input() #get input using the the input method
         shopping_list.items.append([input_string, 1]) #append the string to the shopping list
         exit_on_q.set()#arm the exit on q bool
-        interface.stdscr.clear()
-        interface.print_menu()
-        interface.print_shopping_list()
+        interface.redraw()#refresh screen
 
 class remove_class(popup_class):
     def activate_option(self):
@@ -170,9 +173,7 @@ class remove_class(popup_class):
                 shopping_list.items.pop(iterator)#pop all indexes that matches
             iterator += 1
         exit_on_q.set()#arm the exit on q bool
-        interface.stdscr.clear()
-        interface.print_menu()
-        interface.print_shopping_list()
+        interface.redraw()#refresh screen
 
 class save_class(popup_class):
     def activate_option(self):
@@ -184,9 +185,7 @@ class save_class(popup_class):
             file_to_write.close() #close file
         except:
             print(f"error: couldn't write to file")
-        interface.stdscr.clear() #refresh terminal to remove popup
-        interface.print_menu()
-        interface.print_shopping_list()
+        interface.redraw()#refresh screen, remove popup
 
 class load_class(popup_class):
     def activate_option(self):
@@ -201,9 +200,7 @@ class load_class(popup_class):
                 shopping_list.items.append(new_items[iterator])
         except:
             print(f"error: couldn't read from file")
-        interface.stdscr.clear() #refresh terminal to remove popup
-        interface.print_menu()
-        interface.print_shopping_list()
+        interface.redraw()#refresh screen, remove popup
 
 def move_down(pane):#this will move the selected item down in the list
     if pane == "shopping_list" and shopping_list.selected < (len(shopping_list.items) - 1):#check if the variable is at the highest index already
@@ -235,7 +232,7 @@ def select_up(pane):
         shopping_list.selected -= 1
         interface.print_shopping_list()
 
-def remove_item():
+def remove_selected_item():
     try:
         shopping_list.items.pop(shopping_list.selected)
         interface.stdscr.clear()#flush the screen as the list gets shorter
@@ -244,6 +241,7 @@ def remove_item():
         interface.print_shopping_list()
     except:
         print(f'error: shoppinglist is empty, cant delete item {str(shopping_list.selected)}')
+
 
 def main():
     input_thread.start()
@@ -254,13 +252,18 @@ def main():
             menu.options[iterator][1].set_coords()
         except:
             print(f'{menu.options[iterator][0]} doesnt have a popup function')
+            interface.redraw()#refresh screen
     while True:
         exit_on_q.set() #arm the exit on q bool for the input thread
         key = input_queue.get() #get the keypress from fifo queue
         if key == "q": #python doesn't have switch case and this has to call functions, thus dictonary is too much hassle
             break
         elif key == "d":
-            remove_item()
+            remove_selected_item()
+        elif key == "c":
+            shopping_list.items = [] #clear the list
+            shopping_list.selected = 0
+            interface.redraw()
         elif key == "m":
             move_up(selected_pane)
         elif key == "n":
